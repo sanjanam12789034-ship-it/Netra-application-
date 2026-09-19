@@ -1,1 +1,29 @@
+import streamlit as st
+import pandas as pd
 
+# Page Configuration
+st.set_page_config(page_title="Custom Web App", layout="wide")
+
+st.title("My Web Application")
+st.write("This interactive application is running live on Streamlit Cloud!")
+
+# Sidebar Controls
+st.sidebar.header("User Settings")
+user_name = st.sidebar.text_input("Enter your name", value="Analyst")
+selected_range = st.sidebar.slider("Select an activity score", min_value=10, max_value=100, value=50)
+
+# Main Screen Content
+st.subheader(f"Welcome, {user_name}!")
+st.metric(label="Current Activity Level", value=f"{selected_range} pts")
+
+st.divider()
+
+# Sample Data & Chart (Uses built-in streamlit charts, no extra setup needed)
+st.subheader("Interactive Metrics Overview")
+data = pd.DataFrame({
+    "Category": ["Phase A", "Phase B", "Phase C", "Phase D"],
+    "Values": [35, selected_range, 75, 90]
+})
+
+st.dataframe(data, use_container_width=True)
+st.bar_chart(data.set_index("Category"))
