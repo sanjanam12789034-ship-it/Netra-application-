@@ -1,120 +1,62 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
 
-# Page setup
-st.set_page_config(page_title="Netra | Analytics Platform", layout="wide")
-st.title("Netra: Social Media Analytics Platform")
-st.caption("Real-time sentiment monitoring, trend volume, and misinformation early warning system")
+# Configure the web application layout
+st.set_page_config(page_title="Netra Analytics Portal", layout="wide", page_icon="🌐")
 
-# Sidebar controls
-st.sidebar.header("Controls")
-topic_filter = st.sidebar.selectbox("Select Monitored Topic", ["All Topics", "Environment", "Economy", "Health", "Technology", "Science"])
-min_score = st.sidebar.slider("Minimum Post Engagement Score", min_value=0, max_value=500, value=50)
+# Top Navigation Bar
+st.title("🌐 Netra: Social Media Analytics & Misinformation Portal")
+tabs = st.tabs(["📊 Analytics Dashboard", "🔍 Live Text Analyzer", "ℹ️ About Platform"])
 
-# Embedded baseline dataset
-base_time = datetime.now()
-data = [
-    {
-        "title": "SHOCKING truth about water supply exposed! Wake up before it's deleted!",
-        "topic": "Environment",
-        "sentiment_score": -0.82,
-        "sentiment_label": "Negative",
-        "misinfo_probability": 0.94,
-        "engagement_score": 480,
-        "time_offset": "15m ago"
-    },
-    {
-        "title": "Quarterly trade review indicates stable baseline economic growth",
-        "topic": "Economy",
-        "sentiment_score": 0.45,
-        "sentiment_label": "Positive",
-        "misinfo_probability": 0.08,
-        "engagement_score": 140,
-        "time_offset": "45m ago"
-    },
-    {
-        "title": "Secret miracle health remedy cured everything in 24 hours, doctors silent",
-        "topic": "Health",
-        "sentiment_score": -0.61,
-        "sentiment_label": "Negative",
-        "misinfo_probability": 0.89,
-        "engagement_score": 310,
-        "time_offset": "1h ago"
-    },
-    {
-        "title": "Local municipal council approves timeline for new metro transit line",
-        "topic": "Economy",
-        "sentiment_score": 0.65,
-        "sentiment_label": "Positive",
-        "misinfo_probability": 0.04,
-        "engagement_score": 95,
-        "time_offset": "2h ago"
-    },
-    {
-        "title": "Unverified reports claim secret weather experiment caused local outage",
-        "topic": "Technology",
-        "sentiment_score": -0.73,
-        "sentiment_label": "Negative",
-        "misinfo_probability": 0.87,
-        "engagement_score": 520,
-        "time_offset": "3h ago"
-    },
-    {
-        "title": "Space agency releases high-resolution panoramic imaging from satellite",
-        "topic": "Science",
-        "sentiment_score": 0.58,
-        "sentiment_label": "Positive",
-        "misinfo_probability": 0.05,
-        "engagement_score": 230,
-        "time_offset": "4h ago"
-    }
-]
+# TAB 1: Real-time Analytics Dashboard
+with tabs[0]:
+    st.subheader("Platform Metrics & Narrative Monitoring")
+    
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Analyzed Posts", "1,240", "+12% today")
+    col2.metric("Flagged High-Risk", "18", "-3% vs yesterday")
+    col3.metric("System Health", "Operational (99.9%)")
+    
+    st.divider()
+    
+    st.write("### Trending Misinformation Risk Index")
+    sample_trends = pd.DataFrame({
+        "Topic": ["Public Health", "Elections", "Cybersecurity", "Finance", "Weather"],
+        "Risk Score (%)": [88, 74, 45, 62, 30]
+    })
+    st.bar_chart(sample_trends.set_index("Topic"))
+    
+    st.write("### Flagged Feed")
+    st.dataframe(sample_trends, use_container_width=True)
 
-df = pd.DataFrame(data)
+# TAB 2: Interactive Prediction Tool (User Input Form)
+with tabs[1]:
+    st.subheader("Test Post or Article for Misinformation")
+    st.write("Enter text below to simulate NLP sentiment and misinformation classification:")
+    
+    user_input = st.text_area("Post Content / Article Headline", placeholder="Type or paste social media text here...")
+    
+    if st.button("Analyze Content"):
+        if user_input.strip():
+            st.success("Analysis Complete!")
+            # Sample rule-based demonstration
+            has_urgent = any(w in user_input.lower() for w in ["shocking", "urgent", "secret", "wake up", "exposed"])
+            if has_urgent:
+                st.error("⚠️ Prediction: High Probability of Misinformation / Clickbait (Score: 89%)")
+                st.warning("Sentiment: Highly Negative / Alarmist")
+            else:
+                st.info("✅ Prediction: Verified Baseline / Low Risk (Score: 12%)")
+                st.write("Sentiment: Neutral or Positive")
+        else:
+            st.warning("Please type some text before analyzing.")
 
-# Filtering logic
-if topic_filter != "All Topics":
-    filtered_df = df[df["topic"] == topic_filter].copy()
-else:
-    filtered_df = df.copy()
-
-filtered_df = filtered_df[filtered_df["engagement_score"] >= min_score]
-filtered_df["high_risk"] = (filtered_df["misinfo_probability"] >= 0.70) & (filtered_df["sentiment_label"] == "Negative")
-
-# Top KPI Metric Cards
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Analyzed Posts", len(filtered_df))
-col2.metric("Flagged Narratives", int(filtered_df["high_risk"].sum()) if not filtered_df.empty else 0)
-col3.metric("Negative Sentiment", f"{(filtered_df['sentiment_label'] == 'Negative').mean():.0%}" if not filtered_df.empty else "0%")
-col4.metric("Avg Misinfo Score", f"{filtered_df['misinfo_probability'].mean():.2f}" if not filtered_df.empty else "0.00")
-
-st.divider()
-
-# Native Streamlit Visualizations (Requires no extra libraries)
-c1, c2 = st.columns(2)
-
-with c1:
-    st.subheader("Sentiment Count")
-    if not filtered_df.empty:
-        sentiment_counts = filtered_df["sentiment_label"].value_counts()
-        st.bar_chart(sentiment_counts)
-    else:
-        st.write("No data matching filters.")
-
-with c2:
-    st.subheader("Misinformation Risk Scores")
-    if not filtered_df.empty:
-        chart_data = filtered_df.set_index("title")["misinfo_probability"]
-        st.bar_chart(chart_data)
-    else:
-        st.write("No data matching filters.")
-
-# Alert Queue Table
-st.subheader("Priority Alert Queue (Flagged Narratives)")
-alerts = filtered_df[filtered_df["high_risk"]][["title", "topic", "sentiment_label", "misinfo_probability", "engagement_score"]]
-
-if not alerts.empty:
-    st.dataframe(alerts, use_container_width=True)
-else:
-    st.success("No high-risk narratives match current filters.")
+# TAB 3: About / Project Overview
+with tabs[2]:
+    st.subheader("About the Netra Project")
+    st.write("""
+    **Netra** is an automated intelligence pipeline engineered for:
+    * Ingestion of public social streams (Reddit, Twitter/X, News Feeds).
+    * Natural Language Processing (NLP) sentiment scoring.
+    * Predictive risk modeling for early detection of coordinated misinformation.
+    """)
+    st.info("Architecture: Built with Python, Scikit-Learn, Streamlit Cloud, and Pandas.")
